@@ -10,7 +10,7 @@ export const floorsData: Floor[] = [
       // Desks
       {
         id: 'desk-1',
-        type: 'desk',
+        type: 'Desk',
         pos: { x: 150, y: 150 },
         rotation: 0,
         label: 'Desk 1',
@@ -18,7 +18,7 @@ export const floorsData: Floor[] = [
       },
       {
         id: 'desk-2',
-        type: 'desk',
+        type: 'Desk',
         pos: { x: 350, y: 150 },
         rotation: 0,
         label: 'Desk 2',
@@ -26,7 +26,7 @@ export const floorsData: Floor[] = [
       },
       {
         id: 'desk-3',
-        type: 'desk',
+        type: 'Desk',
         pos: { x: 550, y: 150 },
         rotation: 0,
         label: 'Desk 3',
@@ -34,7 +34,7 @@ export const floorsData: Floor[] = [
       },
       {
         id: 'desk-4',
-        type: 'desk',
+        type: 'Desk',
         pos: { x: 750, y: 150 },
         rotation: 0,
         label: 'Desk 4',
@@ -44,28 +44,28 @@ export const floorsData: Floor[] = [
       // Chairs
       {
         id: 'chair-1',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 150, y: 250 },
         rotation: 180,
         label: 'C1'
       },
       {
         id: 'chair-2',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 350, y: 250 },
         rotation: 180,
         label: 'C2'
       },
       {
         id: 'chair-3',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 550, y: 250 },
         rotation: 180,
         label: 'C3'
       },
       {
         id: 'chair-4',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 750, y: 250 },
         rotation: 180,
         label: 'C4'
@@ -74,7 +74,7 @@ export const floorsData: Floor[] = [
       // Meeting table
       {
         id: 'table-1',
-        type: 'table',
+        type: 'Table',
         pos: { x: 200, y: 450 },
         rotation: 0,
         label: 'Meeting Table'
@@ -83,25 +83,25 @@ export const floorsData: Floor[] = [
       // Chairs around table
       {
         id: 'chair-5',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 140, y: 420 },
         rotation: 90
       },
       {
         id: 'chair-6',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 260, y: 420 },
         rotation: 90
       },
       {
         id: 'chair-7',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 140, y: 480 },
         rotation: 270
       },
       {
         id: 'chair-8',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 260, y: 480 },
         rotation: 270
       },
@@ -109,14 +109,14 @@ export const floorsData: Floor[] = [
       // Cabinets
       {
         id: 'cabinet-1',
-        type: 'cabinet',
+        type: 'Cabinet',
         pos: { x: 900, y: 150 },
         rotation: 0,
         label: 'Storage'
       },
       {
         id: 'cabinet-2',
-        type: 'cabinet',
+        type: 'Cabinet',
         pos: { x: 900, y: 300 },
         rotation: 0,
         label: 'Files'
@@ -125,31 +125,31 @@ export const floorsData: Floor[] = [
       // Plants
       {
         id: 'plant-1',
-        type: 'plant',
+        type: 'Plant',
         pos: { x: 50, y: 50 }
       },
       {
         id: 'plant-2',
-        type: 'plant',
+        type: 'Plant',
         pos: { x: 950, y: 50 }
       },
       {
         id: 'plant-3',
-        type: 'plant',
+        type: 'Plant',
         pos: { x: 500, y: 550 }
       },
 
       // Doors
       {
         id: 'door-1',
-        type: 'door',
+        type: 'Door',
         pos: { x: 50, y: 300 },
         rotation: 0,
         label: 'Main Entrance'
       },
       {
         id: 'door-2',
-        type: 'door',
+        type: 'Door',
         pos: { x: 950, y: 500 },
         rotation: 0,
         label: 'Exit'
@@ -158,19 +158,19 @@ export const floorsData: Floor[] = [
       // Windows
       {
         id: 'window-1',
-        type: 'window',
+        type: 'Window',
         pos: { x: 200, y: 30 },
         rotation: 0
       },
       {
         id: 'window-2',
-        type: 'window',
+        type: 'Window',
         pos: { x: 500, y: 30 },
         rotation: 0
       },
       {
         id: 'window-3',
-        type: 'window',
+        type: 'Window',
         pos: { x: 800, y: 30 },
         rotation: 0
       }
@@ -185,7 +185,7 @@ export const floorsData: Floor[] = [
       // Large conference table
       {
         id: 'table-2',
-        type: 'table',
+        type: 'Table',
         pos: { x: 500, y: 300 },
         rotation: 0,
         label: 'Conference Table'
@@ -194,37 +194,37 @@ export const floorsData: Floor[] = [
       // Chairs around conference table
       {
         id: 'chair-21',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 420, y: 240 },
         rotation: 180
       },
       {
         id: 'chair-22',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 500, y: 240 },
         rotation: 180
       },
       {
         id: 'chair-23',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 580, y: 240 },
         rotation: 180
       },
       {
         id: 'chair-24',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 420, y: 360 },
         rotation: 0
       },
       {
         id: 'chair-25',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 500, y: 360 },
         rotation: 0
       },
       {
         id: 'chair-26',
-        type: 'chair',
+        type: 'Chair',
         pos: { x: 580, y: 360 },
         rotation: 0
       },
@@ -232,7 +232,7 @@ export const floorsData: Floor[] = [
       // Side tables
       {
         id: 'table-3',
-        type: 'table',
+        type: 'Table',
         pos: { x: 150, y: 150 },
         rotation: 0,
         label: 'Break Area'
@@ -241,14 +241,14 @@ export const floorsData: Floor[] = [
       // Cabinets
       {
         id: 'cabinet-21',
-        type: 'cabinet',
+        type: 'Cabinet',
         pos: { x: 850, y: 150 },
         rotation: 0,
         label: 'Supplies'
       },
       {
         id: 'cabinet-22',
-        type: 'cabinet',
+        type: 'Cabinet',
         pos: { x: 850, y: 300 },
         rotation: 0,
         label: 'AV Equipment'
@@ -257,19 +257,19 @@ export const floorsData: Floor[] = [
       // Plants
       {
         id: 'plant-21',
-        type: 'plant',
+        type: 'Plant',
         pos: { x: 100, y: 450 }
       },
       {
         id: 'plant-22',
-        type: 'plant',
+        type: 'Plant',
         pos: { x: 900, y: 450 }
       },
 
       // Door
       {
         id: 'door-21',
-        type: 'door',
+        type: 'Door',
         pos: { x: 50, y: 300 },
         rotation: 0,
         label: 'Entrance'
@@ -278,13 +278,13 @@ export const floorsData: Floor[] = [
       // Windows
       {
         id: 'window-21',
-        type: 'window',
+        type: 'Window',
         pos: { x: 300, y: 30 },
         rotation: 0
       },
       {
         id: 'window-22',
-        type: 'window',
+        type: 'Window',
         pos: { x: 700, y: 30 },
         rotation: 0
       }
@@ -299,7 +299,7 @@ export const floorsData: Floor[] = [
       // Desk clusters
       {
         id: 'desk-31',
-        type: 'desk',
+        type: 'Desk',
         pos: { x: 200, y: 150 },
         rotation: 0,
         label: 'Desk A1',
@@ -307,7 +307,7 @@ export const floorsData: Floor[] = [
       },
       {
         id: 'desk-32',
-        type: 'desk',
+        type: 'Desk',
         pos: { x: 400, y: 150 },
         rotation: 0,
         label: 'Desk A2',
@@ -315,7 +315,7 @@ export const floorsData: Floor[] = [
       },
       {
         id: 'desk-33',
-        type: 'desk',
+        type: 'Desk',
         pos: { x: 200, y: 300 },
         rotation: 180,
         label: 'Desk B1',
@@ -323,7 +323,7 @@ export const floorsData: Floor[] = [
       },
       {
         id: 'desk-34',
-        type: 'desk',
+        type: 'Desk',
         pos: { x: 400, y: 300 },
         rotation: 180,
         label: 'Desk B2',
@@ -333,14 +333,14 @@ export const floorsData: Floor[] = [
       // Standing desks
       {
         id: 'desk-35',
-        type: 'desk',
+        type: 'Desk',
         pos: { x: 700, y: 200 },
         rotation: 0,
         label: 'Standing Desk 1'
       },
       {
         id: 'desk-36',
-        type: 'desk',
+        type: 'Desk',
         pos: { x: 700, y: 400 },
         rotation: 0,
         label: 'Standing Desk 2'
@@ -349,7 +349,7 @@ export const floorsData: Floor[] = [
       // Collaboration table
       {
         id: 'table-31',
-        type: 'table',
+        type: 'Table',
         pos: { x: 300, y: 500 },
         rotation: 0,
         label: 'Collab Space'
@@ -358,7 +358,7 @@ export const floorsData: Floor[] = [
       // Cabinets
       {
         id: 'cabinet-31',
-        type: 'cabinet',
+        type: 'Cabinet',
         pos: { x: 900, y: 100 },
         rotation: 0,
         label: 'Resources'
@@ -367,24 +367,24 @@ export const floorsData: Floor[] = [
       // Plants
       {
         id: 'plant-31',
-        type: 'plant',
+        type: 'Plant',
         pos: { x: 100, y: 100 }
       },
       {
         id: 'plant-32',
-        type: 'plant',
+        type: 'Plant',
         pos: { x: 600, y: 100 }
       },
       {
         id: 'plant-33',
-        type: 'plant',
+        type: 'Plant',
         pos: { x: 900, y: 500 }
       },
 
       // Door
       {
         id: 'door-31',
-        type: 'door',
+        type: 'Door',
         pos: { x: 500, y: 570 },
         rotation: 90,
         label: 'Main Entry'
@@ -393,19 +393,19 @@ export const floorsData: Floor[] = [
       // Windows
       {
         id: 'window-31',
-        type: 'window',
+        type: 'Window',
         pos: { x: 200, y: 30 },
         rotation: 0
       },
       {
         id: 'window-32',
-        type: 'window',
+        type: 'Window',
         pos: { x: 500, y: 30 },
         rotation: 0
       },
       {
         id: 'window-33',
-        type: 'window',
+        type: 'Window',
         pos: { x: 800, y: 30 },
         rotation: 0
       }

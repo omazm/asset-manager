@@ -2,15 +2,25 @@
 
 import { useState, useEffect } from 'react'
 import { Floor, FloorMapProps } from './types'
-import { ItemComponents } from './items'
 import { Resource } from '@/app/lib/resources'
+import { DynamicSVGItem } from './DynamicSVGItem'
+
+interface AssetType {
+  id: string
+  name: string
+  svgData: string
+  createdAt: Date
+  updatedAt: Date
+}
 
 export default function FloorMap({ floors }: FloorMapProps) {
   const [selectedFloorId, setSelectedFloorId] = useState<string>(
     floors.length > 0 ? floors[0].id : ''
   )
   const [resources, setResources] = useState<Resource[]>([])
+  const [assetTypes, setAssetTypes] = useState<AssetType[]>([])
   const [isLoadingResources, setIsLoadingResources] = useState(true)
+  const [isLoadingAssetTypes, setIsLoadingAssetTypes] = useState(true)
 
   useEffect(() => {
     fetch('/api/resources')
@@ -22,6 +32,17 @@ export default function FloorMap({ floors }: FloorMapProps) {
       .catch(error => {
         console.error('Error fetching resources:', error)
         setIsLoadingResources(false)
+      })
+    
+    fetch('/api/asset-types')
+      .then(res => res.json())
+      .then(data => {
+        setAssetTypes(data)
+        setIsLoadingAssetTypes(false)
+      })
+      .catch(error => {
+        console.error('Error fetching asset types:', error)
+        setIsLoadingAssetTypes(false)
       })
   }, [])
 
@@ -117,12 +138,19 @@ export default function FloorMap({ floors }: FloorMapProps) {
 
               {/* Render floor items */}
               {selectedFloor.items.map((item) => {
-                const ItemComponent = ItemComponents[item.type]
-                if (!ItemComponent) {
-                  console.warn(`No component found for item type: ${item.type}`)
+                const assetType = assetTypes.find(at => at.name.toLowerCase() === item.type.toLowerCase())
+                if (!assetType) {
+                  console.warn(`No asset type found for: ${item.type}`)
                   return null
                 }
-                return <ItemComponent key={item.id} item={item} resources={resources} />
+                return (
+                  <DynamicSVGItem 
+                    key={item.id} 
+                    item={item} 
+                    svgData={assetType.svgData}
+                    resources={resources}
+                  />
+                )
               })}
             </svg>
           </div>

@@ -5,7 +5,7 @@ export interface Position {
 
 export interface FloorItem {
   id: string
-  type: 'chair' | 'desk' | 'table' | 'cabinet' | 'plant' | 'door' | 'window'
+  type: string // Asset type name
   pos: Position
   rotation?: number
   label?: string

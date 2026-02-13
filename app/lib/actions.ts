@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 
 export async function createAssetType(prevState: any, formData: FormData) {
   const name = formData.get('name') as string
+  const svgData = formData.get('svgData') as string
 
   if (!name || typeof name !== 'string' || name.trim().length === 0) {
     return {
@@ -13,10 +14,28 @@ export async function createAssetType(prevState: any, formData: FormData) {
     }
   }
 
+  if (!svgData || typeof svgData !== 'string' || svgData.trim().length === 0) {
+    return {
+      success: false,
+      error: 'SVG data is required'
+    }
+  }
+
+  // Validate JSON
+  try {
+    JSON.parse(svgData)
+  } catch (e) {
+    return {
+      success: false,
+      error: 'SVG data must be valid JSON'
+    }
+  }
+
   try {
     const assetType = await prisma.assetType.create({
       data: {
-        name: name.trim()
+        name: name.trim(),
+        svgData: svgData.trim()
       }
     })
 

@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name } = await request.json()
+    const { name, svgData } = await request.json()
     
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return NextResponse.json(
@@ -28,9 +28,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (!svgData || typeof svgData !== 'string' || svgData.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'SVG data is required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate JSON
+    try {
+      JSON.parse(svgData)
+    } catch (e) {
+      return NextResponse.json(
+        { error: 'SVG data must be valid JSON' },
+        { status: 400 }
+      )
+    }
+
     const assetType = await prisma.assetType.create({
       data: {
-        name: name.trim()
+        name: name.trim(),
+        svgData: svgData.trim()
       }
     })
 
