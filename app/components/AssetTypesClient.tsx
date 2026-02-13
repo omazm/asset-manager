@@ -7,6 +7,7 @@ import AssetManagement from '@/app/components/AssetManagement'
 interface AssetType {
   id: string
   name: string
+  svgData: string
   createdAt: Date
   updatedAt: Date
 }

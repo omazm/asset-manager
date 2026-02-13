@@ -3,12 +3,17 @@
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { createAsset } from '@/app/lib/actions'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const initialState = {
   success: false,
   error: '',
   data: null
+}
+
+interface Resource {
+  id: string
+  name: string
 }
 
 function SubmitButton() {
@@ -33,6 +38,21 @@ interface AssetFormProps {
 export default function AssetForm({ assetTypeId, assetTypeName }: AssetFormProps) {
   const [state, formAction] = useActionState(createAsset, initialState)
   const formRef = useRef<HTMLFormElement>(null)
+  const [resources, setResources] = useState<Resource[]>([])
+  const [isLoadingResources, setIsLoadingResources] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/resources')
+      .then(res => res.json())
+      .then(data => {
+        setResources(data)
+        setIsLoadingResources(false)
+      })
+      .catch(error => {
+        console.error('Error fetching resources:', error)
+        setIsLoadingResources(false)
+      })
+  }, [])
 
   useEffect(() => {
     if (state.success) {
@@ -65,14 +85,25 @@ export default function AssetForm({ assetTypeId, assetTypeName }: AssetFormProps
           <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700 mb-1">
             Assigned To
           </label>
-          <input
-            type="text"
-            id="assignedTo"
-            name="assignedTo"
-            placeholder="Enter name..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
-            required
-          />
+          {isLoadingResources ? (
+            <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500 text-sm">
+              Loading resources...
+            </div>
+          ) : (
+            <select
+              id="assignedTo"
+              name="assignedTo"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+              required
+            >
+              <option value="">Select a resource...</option>
+              {resources.map((resource) => (
+                <option key={resource.id} value={resource.id}>
+                  {resource.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {state.error && (
