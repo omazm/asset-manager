@@ -137,3 +137,33 @@ export async function getAssetsByType(assetTypeId: string) {
     return []
   }
 }
+
+export async function getFloors() {
+  try {
+    const floors = await prisma.floor.findMany({
+      include: {
+        items: true
+      },
+      orderBy: { createdAt: 'asc' }
+    })
+    
+    // Transform the data to match the Floor interface
+    return floors.map(floor => ({
+      id: floor.id,
+      name: floor.name,
+      width: floor.width,
+      height: floor.height,
+      items: floor.items.map(item => ({
+        id: item.id,
+        type: item.type,
+        pos: { x: item.posX, y: item.posY },
+        rotation: item.rotation,
+        label: item.label || undefined,
+        assignedTo: item.assignedTo || undefined
+      }))
+    }))
+  } catch (error) {
+    console.error('Error fetching floors:', error)
+    return []
+  }
+}

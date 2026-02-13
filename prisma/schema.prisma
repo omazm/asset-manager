@@ -27,7 +27,7 @@ model AssetType {
 model Asset {
   id           String    @id @default(cuid())
   label        String
-  assignedTo   String
+  assignedTo   String?
   assetTypeId  String
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -35,4 +35,34 @@ model Asset {
   assetType    AssetType @relation(fields: [assetTypeId], references: [id], onDelete: Cascade)
   
   @@map("assets")
+}
+
+model Floor {
+  id        String      @id @default(cuid())
+  name      String
+  width     Int
+  height    Int
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  
+  items     FloorItem[]
+
+  @@map("floors")
+}
+
+model FloorItem {
+  id         String   @id @default(cuid())
+  floorId    String
+  type       String   // Asset type name
+  posX       Float
+  posY       Float
+  rotation   Float    @default(0)
+  label      String?
+  assignedTo String?  // Resource ID
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  floor      Floor    @relation(fields: [floorId], references: [id], onDelete: Cascade)
+  
+  @@map("floor_items")
 }

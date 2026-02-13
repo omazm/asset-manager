@@ -283,19 +283,147 @@ const assetTypesData = [
   }
 ]
 
+const floorsData = [
+  {
+    name: 'First Floor - Main Office',
+    width: 1000,
+    height: 600,
+    items: [
+      { type: 'Desk', posX: 150, posY: 150, rotation: 0, label: 'Desk 1', assignedTo: '1' },
+      { type: 'Desk', posX: 350, posY: 150, rotation: 0, label: 'Desk 2', assignedTo: '2' },
+      { type: 'Desk', posX: 550, posY: 150, rotation: 0, label: 'Desk 3', assignedTo: '3' },
+      { type: 'Desk', posX: 750, posY: 150, rotation: 0, label: 'Desk 4', assignedTo: '4' },
+      { type: 'Chair', posX: 150, posY: 250, rotation: 180, label: 'C1' },
+      { type: 'Chair', posX: 350, posY: 250, rotation: 180, label: 'C2' },
+      { type: 'Chair', posX: 550, posY: 250, rotation: 180, label: 'C3' },
+      { type: 'Chair', posX: 750, posY: 250, rotation: 180, label: 'C4' },
+      { type: 'Table', posX: 200, posY: 450, rotation: 0, label: 'Meeting Table' },
+      { type: 'Chair', posX: 140, posY: 420, rotation: 90 },
+      { type: 'Chair', posX: 260, posY: 420, rotation: 90 },
+      { type: 'Chair', posX: 140, posY: 480, rotation: 270 },
+      { type: 'Chair', posX: 260, posY: 480, rotation: 270 },
+      { type: 'Cabinet', posX: 900, posY: 150, rotation: 0, label: 'Storage' },
+      { type: 'Cabinet', posX: 900, posY: 300, rotation: 0, label: 'Files' },
+      { type: 'Plant', posX: 50, posY: 50, rotation: 0 },
+      { type: 'Plant', posX: 950, posY: 50, rotation: 0 },
+      { type: 'Plant', posX: 500, posY: 550, rotation: 0 },
+      { type: 'Door', posX: 50, posY: 300, rotation: 0, label: 'Main Entrance' },
+      { type: 'Door', posX: 950, posY: 500, rotation: 0, label: 'Exit' },
+      { type: 'Window', posX: 200, posY: 30, rotation: 0 },
+      { type: 'Window', posX: 500, posY: 30, rotation: 0 },
+      { type: 'Window', posX: 800, posY: 30, rotation: 0 }
+    ]
+  },
+  {
+    name: 'Second Floor - Conference Area',
+    width: 1000,
+    height: 600,
+    items: [
+      { type: 'Table', posX: 500, posY: 300, rotation: 0, label: 'Conference Table' },
+      { type: 'Chair', posX: 420, posY: 240, rotation: 180 },
+      { type: 'Chair', posX: 500, posY: 240, rotation: 180 },
+      { type: 'Chair', posX: 580, posY: 240, rotation: 180 },
+      { type: 'Chair', posX: 420, posY: 360, rotation: 0 },
+      { type: 'Chair', posX: 500, posY: 360, rotation: 0 },
+      { type: 'Chair', posX: 580, posY: 360, rotation: 0 },
+      { type: 'Table', posX: 150, posY: 150, rotation: 0, label: 'Break Area' },
+      { type: 'Cabinet', posX: 850, posY: 150, rotation: 0, label: 'Supplies' },
+      { type: 'Cabinet', posX: 850, posY: 300, rotation: 0, label: 'AV Equipment' },
+      { type: 'Plant', posX: 100, posY: 450, rotation: 0 },
+      { type: 'Plant', posX: 900, posY: 450, rotation: 0 },
+      { type: 'Door', posX: 50, posY: 300, rotation: 0, label: 'Entrance' },
+      { type: 'Window', posX: 300, posY: 30, rotation: 0 },
+      { type: 'Window', posX: 700, posY: 30, rotation: 0 }
+    ]
+  },
+  {
+    name: 'Third Floor - Open Workspace',
+    width: 1000,
+    height: 600,
+    items: [
+      { type: 'Desk', posX: 200, posY: 150, rotation: 0, label: 'Desk A1', assignedTo: '5' },
+      { type: 'Desk', posX: 400, posY: 150, rotation: 0, label: 'Desk A2', assignedTo: '6' },
+      { type: 'Desk', posX: 200, posY: 300, rotation: 180, label: 'Desk B1', assignedTo: '7' },
+      { type: 'Desk', posX: 400, posY: 300, rotation: 180, label: 'Desk B2', assignedTo: '8' },
+      { type: 'Desk', posX: 700, posY: 200, rotation: 0, label: 'Standing Desk 1' },
+      { type: 'Desk', posX: 700, posY: 400, rotation: 0, label: 'Standing Desk 2' },
+      { type: 'Table', posX: 300, posY: 500, rotation: 0, label: 'Collab Space' },
+      { type: 'Cabinet', posX: 900, posY: 100, rotation: 0, label: 'Resources' },
+      { type: 'Plant', posX: 100, posY: 100, rotation: 0 },
+      { type: 'Plant', posX: 600, posY: 100, rotation: 0 },
+      { type: 'Plant', posX: 900, posY: 500, rotation: 0 },
+      { type: 'Door', posX: 500, posY: 570, rotation: 90, label: 'Main Entry' },
+      { type: 'Window', posX: 200, posY: 30, rotation: 0 },
+      { type: 'Window', posX: 500, posY: 30, rotation: 0 },
+      { type: 'Window', posX: 800, posY: 30, rotation: 0 }
+    ]
+  }
+]
+
 async function main() {
   console.log('Starting seed...')
 
-  // Delete existing asset types
+  // Delete existing data
+  await prisma.floorItem.deleteMany()
+  await prisma.floor.deleteMany()
   await prisma.assetType.deleteMany()
-  console.log('Cleared existing asset types')
+  console.log('Cleared existing data')
 
   // Create asset types
+  const createdAssetTypes: { [key: string]: string } = {}
   for (const assetTypeData of assetTypesData) {
     const assetType = await prisma.assetType.create({
       data: assetTypeData
     })
+    createdAssetTypes[assetType.name] = assetType.id
     console.log(`Created asset type: ${assetType.name}`)
+  }
+
+  // Create sample assets
+  const sampleAssets = [
+    { label: 'Executive Desk', assetTypeName: 'Desk', assignedTo: '1' },
+    { label: 'Reception Desk', assetTypeName: 'Desk', assignedTo: '2' },
+    { label: 'Conference Table', assetTypeName: 'Table', assignedTo: null },
+    { label: 'Breakroom Table', assetTypeName: 'Table', assignedTo: null },
+    { label: 'Office Chair A1', assetTypeName: 'Chair', assignedTo: '1' },
+    { label: 'Office Chair A2', assetTypeName: 'Chair', assignedTo: '2' },
+    { label: 'Office Chair A3', assetTypeName: 'Chair', assignedTo: '3' },
+    { label: 'Office Chair B1', assetTypeName: 'Chair', assignedTo: '4' },
+    { label: 'Office Chair B2', assetTypeName: 'Chair', assignedTo: '5' },
+    { label: 'Filing Cabinet 101', assetTypeName: 'Cabinet', assignedTo: null },
+    { label: 'Filing Cabinet 102', assetTypeName: 'Cabinet', assignedTo: null },
+    { label: 'Storage Cabinet', assetTypeName: 'Cabinet', assignedTo: null },
+    { label: 'Lobby Plant', assetTypeName: 'Plant', assignedTo: null },
+    { label: 'Office Plant 1', assetTypeName: 'Plant', assignedTo: '6' },
+    { label: 'Office Plant 2', assetTypeName: 'Plant', assignedTo: '7' },
+  ]
+
+  for (const assetData of sampleAssets) {
+    const assetTypeId = createdAssetTypes[assetData.assetTypeName]
+    if (assetTypeId) {
+      const asset = await prisma.asset.create({
+        data: {
+          label: assetData.label,
+          assetTypeId: assetTypeId,
+          assignedTo: assetData.assignedTo
+        }
+      })
+      console.log(`Created asset: ${asset.label} (${assetData.assetTypeName})`)
+    }
+  }
+
+  // Create floors with items
+  for (const floorData of floorsData) {
+    const { items, ...floorInfo } = floorData
+    const floor = await prisma.floor.create({
+      data: {
+        ...floorInfo,
+        items: {
+          create: items
+        }
+      }
+    })
+    console.log(`Created floor: ${floor.name} with ${items.length} items`)
   }
 
   console.log('Seed completed successfully!')

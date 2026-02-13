@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import FloorMap from '@/app/components/FloorMap'
-import { floorsData } from '@/app/lib/floorsData'
+import { getFloors } from '@/app/lib/actions'
 
-export default function FloorMapPage() {
+export default async function FloorMapPage() {
+  const floors = await getFloors()
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
@@ -19,7 +21,7 @@ export default function FloorMapPage() {
           </Link>
         </div>
 
-        <FloorMap floors={floorsData} />
+        <FloorMap floors={floors} />
       </div>
     </div>
   )
