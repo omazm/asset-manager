@@ -1,10 +1,19 @@
-import AvailableAssetsClient from './AvailableAssetsClient'
+import AssetPanelClient from './AssetPanelClient'
 import { prisma } from '@/app/lib/prisma'
+import { getAllAssets } from '@/app/lib/actions'
 
 export default async function AssetsPage() {
-  const assetTypes = await prisma.assetType.findMany({
-    orderBy: { name: 'asc' }
-  })
+  const [assetTypes, createdAssets] = await Promise.all([
+    prisma.assetType.findMany({
+      orderBy: { name: 'asc' }
+    }),
+    getAllAssets()
+  ])
 
-  return <AvailableAssetsClient assetTypes={assetTypes} />
+  return (
+    <AssetPanelClient 
+      assetTypes={assetTypes}
+      createdAssets={createdAssets}
+    />
+  )
 }

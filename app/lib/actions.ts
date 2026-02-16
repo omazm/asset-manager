@@ -550,3 +550,53 @@ export async function createAssetOnFloor(
     }
   }
 }
+
+export async function addExistingAssetToFloor(
+  floorId: string,
+  assetId: string,
+  posX: number,
+  posY: number
+) {
+  try {
+    // Get the existing asset
+    const asset = await prisma.asset.findUnique({
+      where: { id: assetId },
+      include: { assetType: true }
+    })
+
+    if (!asset) {
+      return {
+        success: false,
+        error: 'Asset not found'
+      }
+    }
+
+    // Add it to the floor
+    const floorItem = await prisma.floorItem.create({
+      data: {
+        floorId,
+        type: asset.assetType.name,
+        posX,
+        posY,
+        rotation: 0,
+        label: asset.label,
+        assignedTo: asset.assignedTo
+      }
+    })
+
+    revalidatePath('/floor-map')
+    revalidatePath('/asset-types')
+    
+    return {
+      success: true,
+      data: floorItem
+    }
+  } catch (error: any) {
+    console.error('Error adding existing asset to floor:', error)
+    
+    return {
+      success: false,
+      error: 'Failed to add existing asset to floor'
+    }
+  }
+}

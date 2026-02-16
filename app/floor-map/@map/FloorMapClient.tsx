@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { DynamicSVGItem } from '@/app/components/FloorMap/DynamicSVGItem'
-import { updateFloorItemPosition, createAssetOnFloor } from '@/app/lib/actions'
+import { updateFloorItemPosition, createAssetOnFloor, addExistingAssetToFloor } from '@/app/lib/actions'
 
 interface Floor {
   id: string
@@ -47,6 +48,7 @@ export default function FloorMapClient({ floors: initialFloors, resources, asset
   )
   const [isDragOver, setIsDragOver] = useState(false)
   const svgRef = useRef<SVGSVGElement>(null)
+  const router = useRouter()
 
   const selectedFloor = floors.find((floor) => floor.id === selectedFloorId)
 
@@ -56,8 +58,11 @@ export default function FloorMapClient({ floors: initialFloors, resources, asset
 
   const handlePositionChange = async (itemId: string, x: number, y: number) => {
     const result = await updateFloorItemPosition(itemId, x, y)
-    if (!result.success) {
+    if (result.success) {
+      router.refresh()
+    } else {
       console.error('Failed to update position:', result.error)
+      alert('Failed to update asset position')
     }
   }
 
@@ -75,45 +80,93 @@ export default function FloorMapClient({ floors: initialFloors, resources, asset
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
-    e.dataTransfer.dropEffect = 'copy'
-    setIsDragOver(true)
+    e.stopPropagation()
+    
+    // Only show drag-over state if there's actual data being transferred
+    const hasData = e.dataTransfer.types.includes('application/json')
+    if (hasData) {
+      e.dataTransfer.dropEffect = 'copy'
+      setIsDragOver(true)
+    }
   }
 
-  const handleDragLeave = () => {
-    setIsDragOver(false)
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear drag-over state if leaving the container, not child elements
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    if (
+      e.clientX < rect.left ||
+      e.clientX >= rect.right ||
+      e.clientY < rect.top ||
+      e.clientY >= rect.bottom
+    ) {
+      setIsDragOver(false)
+    }
   }
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     setIsDragOver(false)
 
-    if (!selectedFloor) return
+    if (!selectedFloor) {
+      console.warn('No floor selected for drop')
+      return
+    }
 
     try {
-      const data = JSON.parse(e.dataTransfer.getData('application/json'))
-      const { assetTypeId, assetTypeName } = data
+      const dataString = e.dataTransfer.getData('application/json')
+      if (!dataString) {
+        console.warn('No drag data found')
+        return
+      }
+      
+      const data = JSON.parse(dataString)
+
+      // Validate drag data
+      if (!data.isExistingAsset && !data.assetTypeId) {
+        console.error('Invalid drag data: missing asset type id')
+        return
+      }
+      if (data.isExistingAsset && !data.assetId) {
+        console.error('Invalid drag data: missing asset id')
+        return
+      }
 
       // Get SVG coordinates from drop position
       const { x, y } = getSVGCoordinates(e.clientX, e.clientY)
 
-      // Create asset on floor
-      const result = await createAssetOnFloor(
-        selectedFloor.id,
-        assetTypeId,
-        assetTypeName,
-        x,
-        y
-      )
+      let result
+
+      // Check if dragging an existing asset or a new asset type
+      if (data.isExistingAsset) {
+        // Add existing asset to floor
+        result = await addExistingAssetToFloor(
+          selectedFloor.id,
+          data.assetId,
+          x,
+          y
+        )
+      } else {
+        // Create new asset from asset type
+        result = await createAssetOnFloor(
+          selectedFloor.id,
+          data.assetTypeId,
+          data.assetTypeName,
+          x,
+          y
+        )
+      }
 
       if (result.success) {
-        // Refresh the page to show the new asset
-        window.location.reload()
+        // Refresh to show the new asset
+        router.refresh()
       } else {
-        console.error('Failed to create asset:', result.error)
-        alert('Failed to add asset to floor')
+        console.error('Failed to add asset:', result.error)
+        alert(`Failed to add asset to floor: ${result.error}`)
       }
     } catch (error) {
       console.error('Error handling drop:', error)
+      alert('An error occurred while adding the asset')
     }
   }
 

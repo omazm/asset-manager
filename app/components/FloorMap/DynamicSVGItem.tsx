@@ -69,7 +69,12 @@ export function DynamicSVGItem({ item, svgData, resources, onPositionChange, svg
   }
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Only start drag on left mouse button
+    if (e.button !== 0) return
+    
     e.stopPropagation()
+    e.preventDefault()
+    
     const svgCoords = getSVGCoordinates(e.clientX, e.clientY)
     dragStartRef.current = {
       x: svgCoords.x - dragPos.x,
@@ -81,6 +86,7 @@ export function DynamicSVGItem({ item, svgData, resources, onPositionChange, svg
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !dragStartRef.current) return
     
+    e.preventDefault()
     const svgCoords = getSVGCoordinates(e.clientX, e.clientY)
     const newX = svgCoords.x - dragStartRef.current.x
     const newY = svgCoords.y - dragStartRef.current.y
@@ -88,8 +94,9 @@ export function DynamicSVGItem({ item, svgData, resources, onPositionChange, svg
     setDragPos({ x: newX, y: newY })
   }
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e: React.MouseEvent) => {
     if (isDragging) {
+      e.preventDefault()
       setIsDragging(false)
       dragStartRef.current = null
       

@@ -82,9 +82,9 @@ function AssetTypePreview({ assetType }: { assetType: AssetType }) {
 
 export default function AvailableAssetsClient({ assetTypes }: AvailableAssetsClientProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 sticky top-8">
+    <>
       <div className="mb-4">
-        <h3 className="text-xl font-bold text-gray-900">Available Assets</h3>
+        <h3 className="text-xl font-bold text-gray-900">Available Asset Types</h3>
         <p className="text-sm text-gray-600">Drag to add to floor map</p>
       </div>
 
@@ -103,10 +103,10 @@ export default function AvailableAssetsClient({ assetTypes }: AvailableAssetsCli
       <div className="mt-6 pt-4 border-t">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <p className="text-xs text-gray-700">
-            <strong className="text-blue-700">How to use:</strong> Click and drag any asset type from this list onto the floor map to add it at your desired location.
+            <strong className="text-blue-700">How to use:</strong> Drag an asset type onto the floor map to create a new asset at your desired location.
           </p>
         </div>
       </div>
-    </div>
+    </>
   )
 }
