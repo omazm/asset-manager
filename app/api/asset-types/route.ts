@@ -1,12 +1,25 @@
 import { prisma } from '@/app/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
+import { readOfflineData, writeOfflineData, STORAGE_KEYS } from '@/app/lib/offline-storage'
 
 
 export async function GET() {
   try {
+    // Try to read from offline storage first
+    const cachedData = await readOfflineData(STORAGE_KEYS.ASSET_TYPES)
+    
+    if (cachedData) {
+      return NextResponse.json(cachedData)
+    }
+
+    // If no cached data, fetch from database
     const assetTypes = await prisma.assetType.findMany({
       orderBy: { createdAt: 'desc' }
     })
+    
+    // Save to offline storage
+    await writeOfflineData(STORAGE_KEYS.ASSET_TYPES, assetTypes)
+    
     return NextResponse.json(assetTypes)
   } catch (error) {
     console.error('Error fetching asset types:', error)
@@ -51,6 +64,12 @@ export async function POST(request: NextRequest) {
         svgData: svgData.trim()
       }
     })
+
+    // Update offline storage
+    const allAssetTypes = await prisma.assetType.findMany({
+      orderBy: { createdAt: 'desc' }
+    })
+    await writeOfflineData(STORAGE_KEYS.ASSET_TYPES, allAssetTypes)
 
     return NextResponse.json(assetType, { status: 201 })
   } catch (error: any) {

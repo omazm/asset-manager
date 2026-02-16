@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { DynamicSVGItem } from '@/app/components/FloorMap/DynamicSVGItem'
-import { updateFloorItemPosition, createAssetOnFloor, addExistingAssetToFloor } from '@/app/lib/actions'
+import { updateFloorItemPosition, createAssetOnFloor, addExistingAssetToFloor, saveFloorsToDatabase } from '@/app/lib/actions'
 
 interface Floor {
   id: string
@@ -47,6 +47,7 @@ export default function FloorMapClient({ floors: initialFloors, resources, asset
     initialFloors.length > 0 ? initialFloors[0].id : ''
   )
   const [isDragOver, setIsDragOver] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const svgRef = useRef<SVGSVGElement>(null)
   const router = useRouter()
 
@@ -54,6 +55,26 @@ export default function FloorMapClient({ floors: initialFloors, resources, asset
 
   const handleFloorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedFloorId(e.target.value)
+  }
+
+  const handleSaveToDatabase = async () => {
+    if (isSaving) return
+    
+    setIsSaving(true)
+    try {
+      const result = await saveFloorsToDatabase()
+      if (result.success) {
+        alert(result.message || 'Floors saved to database successfully!')
+        router.refresh()
+      } else {
+        alert(`Error: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Error saving floors:', error)
+      alert('Failed to save floors to database')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handlePositionChange = async (itemId: string, x: number, y: number) => {
@@ -182,23 +203,41 @@ export default function FloorMapClient({ floors: initialFloors, resources, asset
 
   return (
     <div className="space-y-6">
-      {/* Floor Selector Dropdown */}
+      {/* Floor Selector and Save Button */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <label htmlFor="floor-select" className="block text-sm font-medium text-gray-700 mb-2">
-          Select Floor
-        </label>
-        <select
-          id="floor-select"
-          value={selectedFloorId}
-          onChange={handleFloorChange}
-          className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-        >
-          {floors.map((floor) => (
-            <option key={floor.id} value={floor.id}>
-              {floor.name}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-end gap-4">
+          <div className="flex-1">
+            <label htmlFor="floor-select" className="block text-sm font-medium text-gray-700 mb-2">
+              Select Floor
+            </label>
+            <select
+              id="floor-select"
+              value={selectedFloorId}
+              onChange={handleFloorChange}
+              className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+            >
+              {floors.map((floor) => (
+                <option key={floor.id} value={floor.id}>
+                  {floor.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={handleSaveToDatabase}
+            disabled={isSaving}
+            className={`px-6 py-2 rounded-md font-medium transition-colors ${
+              isSaving
+                ? 'bg-gray-400 cursor-not-allowed text-white'
+                : 'bg-green-600 hover:bg-green-700 text-white'
+            }`}
+          >
+            {isSaving ? 'Saving...' : 'Save to Database'}
+          </button>
+        </div>
+        <p className="mt-2 text-sm text-gray-600">
+          Changes are saved locally. Click "Save to Database" to persist all floor changes.
+        </p>
       </div>
 
       {/* Floor Map */}

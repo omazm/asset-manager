@@ -2,6 +2,15 @@
 
 import { prisma } from '@/app/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { 
+  readOfflineData, 
+  writeOfflineData, 
+  STORAGE_KEYS,
+  updateFloorInOfflineStorage,
+  updateFloorItemInOfflineStorage,
+  addFloorItemToOfflineStorage,
+  removeFloorItemFromOfflineStorage
+} from '@/app/lib/offline-storage'
 
 export async function createAssetType(prevState: any, formData: FormData) {
   const name = formData.get('name') as string
@@ -39,6 +48,12 @@ export async function createAssetType(prevState: any, formData: FormData) {
       }
     })
 
+    // Update offline storage
+    const allAssetTypes = await prisma.assetType.findMany({
+      orderBy: { createdAt: 'desc' }
+    })
+    await writeOfflineData(STORAGE_KEYS.ASSET_TYPES, allAssetTypes)
+
     revalidatePath('/asset-types')
     
     return {
@@ -64,9 +79,21 @@ export async function createAssetType(prevState: any, formData: FormData) {
 
 export async function getAssetTypes() {
   try {
+    // Try to read from offline storage first
+    const cachedData = await readOfflineData(STORAGE_KEYS.ASSET_TYPES)
+    
+    if (cachedData) {
+      return cachedData
+    }
+
+    // If no cached data, fetch from database
     const assetTypes = await prisma.assetType.findMany({
       orderBy: { createdAt: 'desc' }
     })
+    
+    // Save to offline storage
+    await writeOfflineData(STORAGE_KEYS.ASSET_TYPES, assetTypes)
+    
     return assetTypes
   } catch (error) {
     console.error('Error fetching asset types:', error)
@@ -109,6 +136,13 @@ export async function createAsset(prevState: any, formData: FormData) {
       }
     })
 
+    // Update offline storage for all assets
+    const allAssets = await prisma.asset.findMany({
+      include: { assetType: true },
+      orderBy: { createdAt: 'desc' }
+    })
+    await writeOfflineData(STORAGE_KEYS.ASSETS, allAssets)
+
     revalidatePath('/asset-types')
     
     return {
@@ -127,10 +161,21 @@ export async function createAsset(prevState: any, formData: FormData) {
 
 export async function getAssetsByType(assetTypeId: string) {
   try {
+    // Try to read from offline storage first
+    const cachedData = await readOfflineData(STORAGE_KEYS.ASSETS)
+    
+    if (cachedData) {
+      const assets = (cachedData as any[]).filter((asset: any) => asset.assetTypeId === assetTypeId)
+      return assets
+    }
+
+    // If no cached data, fetch from database
     const assets = await prisma.asset.findMany({
       where: { assetTypeId },
+      include: { assetType: true },
       orderBy: { createdAt: 'desc' }
     })
+    
     return assets
   } catch (error) {
     console.error('Error fetching assets:', error)
@@ -140,12 +185,24 @@ export async function getAssetsByType(assetTypeId: string) {
 
 export async function getAllAssets() {
   try {
+    // Try to read from offline storage first
+    const cachedData = await readOfflineData(STORAGE_KEYS.ASSETS)
+    
+    if (cachedData) {
+      return cachedData
+    }
+
+    // If no cached data, fetch from database
     const assets = await prisma.asset.findMany({
       include: {
         assetType: true
       },
       orderBy: { createdAt: 'desc' }
     })
+    
+    // Save to offline storage
+    await writeOfflineData(STORAGE_KEYS.ASSETS, assets)
+    
     return assets
   } catch (error) {
     console.error('Error fetching all assets:', error)
@@ -188,6 +245,13 @@ export async function updateAsset(prevState: any, formData: FormData) {
       }
     })
 
+    // Update offline storage for all assets
+    const allAssets = await prisma.asset.findMany({
+      include: { assetType: true },
+      orderBy: { createdAt: 'desc' }
+    })
+    await writeOfflineData(STORAGE_KEYS.ASSETS, allAssets)
+
     revalidatePath('/asset-types')
     
     return {
@@ -206,6 +270,14 @@ export async function updateAsset(prevState: any, formData: FormData) {
 
 export async function getFloors() {
   try {
+    // Try to read from offline storage first
+    const cachedData = await readOfflineData(STORAGE_KEYS.FLOORS)
+    
+    if (cachedData) {
+      return cachedData
+    }
+
+    // If no cached data, fetch from database
     const floors = await prisma.floor.findMany({
       include: {
         items: true
@@ -214,7 +286,7 @@ export async function getFloors() {
     })
     
     // Transform the data to match the Floor interface
-    return floors.map(floor => ({
+    const transformedFloors = floors.map(floor => ({
       id: floor.id,
       name: floor.name,
       width: floor.width,
@@ -228,6 +300,11 @@ export async function getFloors() {
         assignedTo: item.assignedTo || undefined
       }))
     }))
+    
+    // Save to offline storage
+    await writeOfflineData(STORAGE_KEYS.FLOORS, transformedFloors)
+    
+    return transformedFloors
   } catch (error) {
     console.error('Error fetching floors:', error)
     return []
@@ -481,18 +558,31 @@ export async function deleteFloorItem(floorItemId: string) {
 
 export async function updateFloorItemPosition(floorItemId: string, posX: number, posY: number) {
   try {
-    await prisma.floorItem.update({
-      where: { id: floorItemId },
-      data: {
-        posX,
-        posY
+    // Update in offline storage only
+    const floors = await readOfflineData<any[]>(STORAGE_KEYS.FLOORS)
+    if (!floors) {
+      return {
+        success: false,
+        error: 'No floor data available'
       }
-    })
+    }
 
-    revalidatePath('/floor-map')
+    // Find the floor containing this item
+    for (const floor of floors) {
+      const itemIndex = floor.items?.findIndex((item: any) => item.id === floorItemId)
+      if (itemIndex !== -1 && itemIndex !== undefined) {
+        floor.items[itemIndex].pos = { x: posX, y: posY }
+        await writeOfflineData(STORAGE_KEYS.FLOORS, floors)
+        revalidatePath('/floor-map')
+        return {
+          success: true
+        }
+      }
+    }
     
     return {
-      success: true
+      success: false,
+      error: 'Floor item not found'
     }
   } catch (error: any) {
     console.error('Error updating floor item position:', error)
@@ -512,34 +602,44 @@ export async function createAssetOnFloor(
   posY: number
 ) {
   try {
-    // First create the asset with blank label and assignee
-    const asset = await prisma.asset.create({
-      data: {
-        label: `${assetTypeName}-${Date.now()}`, // Generate temporary label
-        assignedTo: null,
-        assetTypeId
-      }
-    })
+    // Generate IDs for new items
+    const assetId = `asset_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const floorItemId = `flooritem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const label = `${assetTypeName}-${Date.now()}`
 
-    // Then add it to the floor
-    const floorItem = await prisma.floorItem.create({
-      data: {
-        floorId,
-        type: assetTypeName,
-        posX,
-        posY,
-        rotation: 0,
-        label: asset.label,
-        assignedTo: null
-      }
-    })
+    // Create asset in offline storage
+    const newAsset = {
+      id: assetId,
+      label,
+      assignedTo: null,
+      assetTypeId,
+      assetType: { name: assetTypeName },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    const allAssets = await readOfflineData<any[]>(STORAGE_KEYS.ASSETS) || []
+    allAssets.unshift(newAsset)
+    await writeOfflineData(STORAGE_KEYS.ASSETS, allAssets)
+
+    // Add floor item to offline storage
+    const newFloorItem = {
+      id: floorItemId,
+      type: assetTypeName,
+      pos: { x: posX, y: posY },
+      rotation: 0,
+      label,
+      assignedTo: null
+    }
+    
+    await addFloorItemToOfflineStorage(floorId, newFloorItem)
 
     revalidatePath('/floor-map')
     revalidatePath('/asset-types')
     
     return {
       success: true,
-      data: { asset, floorItem }
+      data: { asset: newAsset, floorItem: newFloorItem }
     }
   } catch (error: any) {
     console.error('Error creating asset on floor:', error)
@@ -558,11 +658,9 @@ export async function addExistingAssetToFloor(
   posY: number
 ) {
   try {
-    // Get the existing asset
-    const asset = await prisma.asset.findUnique({
-      where: { id: assetId },
-      include: { assetType: true }
-    })
+    // Get the existing asset from offline storage
+    const allAssets = await readOfflineData<any[]>(STORAGE_KEYS.ASSETS)
+    const asset = allAssets?.find((a: any) => a.id === assetId)
 
     if (!asset) {
       return {
@@ -571,25 +669,27 @@ export async function addExistingAssetToFloor(
       }
     }
 
-    // Add it to the floor
-    const floorItem = await prisma.floorItem.create({
-      data: {
-        floorId,
-        type: asset.assetType.name,
-        posX,
-        posY,
-        rotation: 0,
-        label: asset.label,
-        assignedTo: asset.assignedTo
-      }
-    })
+    // Create floor item ID
+    const floorItemId = `flooritem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    
+    // Add it to the floor in offline storage
+    const newFloorItem = {
+      id: floorItemId,
+      type: asset.assetType.name,
+      pos: { x: posX, y: posY },
+      rotation: 0,
+      label: asset.label,
+      assignedTo: asset.assignedTo
+    }
+    
+    await addFloorItemToOfflineStorage(floorId, newFloorItem)
 
     revalidatePath('/floor-map')
     revalidatePath('/asset-types')
     
     return {
       success: true,
-      data: floorItem
+      data: newFloorItem
     }
   } catch (error: any) {
     console.error('Error adding existing asset to floor:', error)
@@ -597,6 +697,130 @@ export async function addExistingAssetToFloor(
     return {
       success: false,
       error: 'Failed to add existing asset to floor'
+    }
+  }
+}
+
+// Save floors from offline storage to database
+export async function saveFloorsToDatabase() {
+  try {
+    // Read offline floor data
+    const offlineFloors = await readOfflineData<any[]>(STORAGE_KEYS.FLOORS)
+    
+    if (!offlineFloors) {
+      return {
+        success: false,
+        error: 'No offline floor data found'
+      }
+    }
+
+    // Start a transaction to save all data
+    const result = await prisma.$transaction(async (tx) => {
+      const savedFloors = []
+      
+      for (const floor of offlineFloors) {
+        // Check if floor exists in database
+        const existingFloor = await tx.floor.findUnique({
+          where: { id: floor.id }
+        })
+
+        let dbFloor
+        if (existingFloor) {
+          // Update existing floor
+          dbFloor = await tx.floor.update({
+            where: { id: floor.id },
+            data: {
+              name: floor.name,
+              width: floor.width,
+              height: floor.height
+            }
+          })
+        } else {
+          // Create new floor
+          dbFloor = await tx.floor.create({
+            data: {
+              id: floor.id,
+              name: floor.name,
+              width: floor.width,
+              height: floor.height
+            }
+          })
+        }
+
+        // Delete all existing floor items for this floor
+        await tx.floorItem.deleteMany({
+          where: { floorId: floor.id }
+        })
+
+        // Create new floor items
+        if (floor.items && floor.items.length > 0) {
+          for (const item of floor.items) {
+            await tx.floorItem.create({
+              data: {
+                id: item.id,
+                floorId: floor.id,
+                type: item.type,
+                posX: item.pos.x,
+                posY: item.pos.y,
+                rotation: item.rotation || 0,
+                label: item.label || null,
+                assignedTo: item.assignedTo || null
+              }
+            })
+          }
+        }
+
+        savedFloors.push(dbFloor)
+      }
+
+      return savedFloors
+    })
+
+    // Also save any new assets that were created
+    const offlineAssets = await readOfflineData<any[]>(STORAGE_KEYS.ASSETS)
+    if (offlineAssets) {
+      for (const asset of offlineAssets) {
+        // Check if asset exists in database
+        const existingAsset = await prisma.asset.findUnique({
+          where: { id: asset.id }
+        })
+
+        if (!existingAsset) {
+          // Create new asset in database
+          await prisma.asset.create({
+            data: {
+              id: asset.id,
+              label: asset.label,
+              assignedTo: asset.assignedTo,
+              assetTypeId: asset.assetTypeId
+            }
+          })
+        } else {
+          // Update existing asset
+          await prisma.asset.update({
+            where: { id: asset.id },
+            data: {
+              label: asset.label,
+              assignedTo: asset.assignedTo
+            }
+          })
+        }
+      }
+    }
+
+    revalidatePath('/floor-map')
+    revalidatePath('/asset-types')
+    
+    return {
+      success: true,
+      message: `Successfully saved ${result.length} floor(s) to database`
+    }
+  } catch (error: any) {
+    console.error('Error saving floors to database:', error)
+    
+    return {
+      success: false,
+      error: 'Failed to save floors to database: ' + error.message
     }
   }
 }

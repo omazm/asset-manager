@@ -10,7 +10,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "offline:sync": "tsx scripts/sync-offline-storage.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
