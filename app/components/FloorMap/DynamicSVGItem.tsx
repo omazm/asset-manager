@@ -1,5 +1,6 @@
 import { FloorItem } from './types'
 import { Resource } from '@/app/lib/resources'
+import { useState, useRef } from 'react'
 
 interface SVGElement {
   type: 'rect' | 'circle' | 'line' | 'path'
@@ -15,10 +16,15 @@ interface DynamicItemProps {
   item: FloorItem
   svgData: string
   resources?: Resource[]
+  onPositionChange?: (id: string, x: number, y: number) => void
+  svgRef?: React.RefObject<SVGSVGElement>
 }
 
-export function DynamicSVGItem({ item, svgData, resources }: DynamicItemProps) {
+export function DynamicSVGItem({ item, svgData, resources, onPositionChange, svgRef }: DynamicItemProps) {
   const { pos, rotation = 0, label, assignedTo } = item
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragPos, setDragPos] = useState(pos)
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null)
   
   let parsedSVG: SVGData
   try {
@@ -50,8 +56,62 @@ export function DynamicSVGItem({ item, svgData, resources }: DynamicItemProps) {
     }
   }
 
+  const getSVGCoordinates = (clientX: number, clientY: number) => {
+    if (!svgRef?.current) return { x: clientX, y: clientY }
+    
+    const svg = svgRef.current
+    const pt = svg.createSVGPoint()
+    pt.x = clientX
+    pt.y = clientY
+    
+    const svgP = pt.matrixTransform(svg.getScreenCTM()?.inverse())
+    return { x: svgP.x, y: svgP.y }
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const svgCoords = getSVGCoordinates(e.clientX, e.clientY)
+    dragStartRef.current = {
+      x: svgCoords.x - dragPos.x,
+      y: svgCoords.y - dragPos.y
+    }
+    setIsDragging(true)
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !dragStartRef.current) return
+    
+    const svgCoords = getSVGCoordinates(e.clientX, e.clientY)
+    const newX = svgCoords.x - dragStartRef.current.x
+    const newY = svgCoords.y - dragStartRef.current.y
+    
+    setDragPos({ x: newX, y: newY })
+  }
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      setIsDragging(false)
+      dragStartRef.current = null
+      
+      // Save position to database
+      if (onPositionChange && (dragPos.x !== pos.x || dragPos.y !== pos.y)) {
+        onPositionChange(item.id, dragPos.x, dragPos.y)
+      }
+    }
+  }
+
   return (
-    <g transform={`translate(${pos.x}, ${pos.y}) rotate(${rotation})`}>
+    <g 
+      transform={`translate(${dragPos.x}, ${dragPos.y}) rotate(${rotation})`}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      style={{ 
+        cursor: isDragging ? 'grabbing' : 'grab',
+        opacity: isDragging ? 0.7 : 1
+      }}
+    >
       {parsedSVG.elements.map((element, index) => renderElement(element, index))}
       
       {/* Render label */}
@@ -63,6 +123,7 @@ export function DynamicSVGItem({ item, svgData, resources }: DynamicItemProps) {
           fill="#333" 
           textAnchor="middle"
           fontWeight={parsedSVG.type === 'desk' ? 'bold' : 'normal'}
+          pointerEvents="none"
         >
           {label}
         </text>
@@ -70,10 +131,18 @@ export function DynamicSVGItem({ item, svgData, resources }: DynamicItemProps) {
       
       {/* Render assigned name for desks */}
       {assignedName && parsedSVG.type === 'desk' && (
-        <text x="0" y="65" fontSize="10" fill="#666" textAnchor="middle">
+        <text 
+          x="0" 
+          y="65" 
+          fontSize="10" 
+          fill="#666" 
+          textAnchor="middle"
+          pointerEvents="none"
+        >
           {assignedName}
         </text>
       )}
     </g>
   )
 }
+

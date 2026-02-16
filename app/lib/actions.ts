@@ -478,3 +478,28 @@ export async function deleteFloorItem(floorItemId: string) {
     }
   }
 }
+
+export async function updateFloorItemPosition(floorItemId: string, posX: number, posY: number) {
+  try {
+    await prisma.floorItem.update({
+      where: { id: floorItemId },
+      data: {
+        posX,
+        posY
+      }
+    })
+
+    revalidatePath('/floor-map')
+    
+    return {
+      success: true
+    }
+  } catch (error: any) {
+    console.error('Error updating floor item position:', error)
+    
+    return {
+      success: false,
+      error: 'Failed to update position'
+    }
+  }
+}
