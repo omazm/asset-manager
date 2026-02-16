@@ -503,3 +503,50 @@ export async function updateFloorItemPosition(floorItemId: string, posX: number,
     }
   }
 }
+
+export async function createAssetOnFloor(
+  floorId: string,
+  assetTypeId: string,
+  assetTypeName: string,
+  posX: number,
+  posY: number
+) {
+  try {
+    // First create the asset with blank label and assignee
+    const asset = await prisma.asset.create({
+      data: {
+        label: `${assetTypeName}-${Date.now()}`, // Generate temporary label
+        assignedTo: null,
+        assetTypeId
+      }
+    })
+
+    // Then add it to the floor
+    const floorItem = await prisma.floorItem.create({
+      data: {
+        floorId,
+        type: assetTypeName,
+        posX,
+        posY,
+        rotation: 0,
+        label: asset.label,
+        assignedTo: null
+      }
+    })
+
+    revalidatePath('/floor-map')
+    revalidatePath('/asset-types')
+    
+    return {
+      success: true,
+      data: { asset, floorItem }
+    }
+  } catch (error: any) {
+    console.error('Error creating asset on floor:', error)
+    
+    return {
+      success: false,
+      error: 'Failed to create asset on floor'
+    }
+  }
+}
