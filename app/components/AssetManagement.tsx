@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useActionState } from 'react'
 import AssetForm from './AssetForm'
-import { getAssetsByType } from '@/app/lib/actions'
+import { getAssetsByType, updateAsset } from '@/app/lib/actions'
 
 interface AssetType {
   id: string
@@ -73,6 +74,120 @@ interface Resource {
   name: string
 }
 
+interface EditableAssetItemProps {
+  asset: Asset
+  resources: Resource[]
+  getResourceName: (resourceId: string) => string
+  onUpdate: () => void
+}
+
+function EditableAssetItem({ asset, resources, getResourceName, onUpdate }: EditableAssetItemProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editLabel, setEditLabel] = useState(asset.label)
+  const [editAssignedTo, setEditAssignedTo] = useState(asset.assignedTo)
+  const [state, formAction, isPending] = useActionState(updateAsset, { success: false, error: '' })
+
+  useEffect(() => {
+    if (state.success) {
+      setIsEditing(false)
+      onUpdate()
+    }
+  }, [state.success, onUpdate])
+
+  const handleCancel = () => {
+    setEditLabel(asset.label)
+    setEditAssignedTo(asset.assignedTo)
+    setIsEditing(false)
+  }
+
+  if (isEditing) {
+    return (
+      <form action={formAction} className="p-3 border border-blue-300 rounded-lg bg-blue-50">
+        <input type="hidden" name="id" value={asset.id} />
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Label
+            </label>
+            <input
+              type="text"
+              name="label"
+              value={editLabel}
+              onChange={(e) => setEditLabel(e.target.value)}
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              required
+              disabled={isPending}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Assigned To
+            </label>
+            <select
+              name="assignedTo"
+              value={editAssignedTo}
+              onChange={(e) => setEditAssignedTo(e.target.value)}
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              required
+              disabled={isPending}
+            >
+              {resources.map((resource) => (
+                <option key={resource.id} value={resource.id}>
+                  {resource.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {state.error && (
+            <div className="p-2 bg-red-100 border border-red-400 text-red-700 rounded text-xs">
+              {state.error}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="flex-1 bg-blue-600 text-white py-1.5 px-3 rounded text-sm hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+            >
+              {isPending ? 'Saving...' : 'Save'}
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={isPending}
+              className="flex-1 bg-gray-200 text-gray-700 py-1.5 px-3 rounded text-sm hover:bg-gray-300 disabled:bg-gray-100 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </form>
+    )
+  }
+
+  return (
+    <div className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+      <div className="flex justify-between items-start">
+        <div className="flex-1">
+          <h5 className="font-medium text-gray-900">{asset.label}</h5>
+          <p className="text-sm text-gray-600">Assigned to: {getResourceName(asset.assignedTo)}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">
+            {new Date(asset.createdAt).toLocaleDateString()}
+          </span>
+          <button
+            onClick={() => setIsEditing(true)}
+            className="ml-2 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Edit
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 interface AssetManagementProps {
   selectedAssetType: AssetType | null
 }
@@ -91,15 +206,21 @@ export default function AssetManagement({ selectedAssetType }: AssetManagementPr
 
   useEffect(() => {
     if (selectedAssetType) {
-      setIsLoadingAssets(true)
-      getAssetsByType(selectedAssetType.id).then((data) => {
-        setAssets(data)
-        setIsLoadingAssets(false)
-      })
+      loadAssets()
     } else {
       setAssets([])
     }
   }, [selectedAssetType])
+
+  const loadAssets = () => {
+    if (!selectedAssetType) return
+    
+    setIsLoadingAssets(true)
+    getAssetsByType(selectedAssetType.id).then((data) => {
+      setAssets(data)
+      setIsLoadingAssets(false)
+    })
+  }
 
   const getResourceName = (resourceId: string) => {
     const resource = resources.find(r => r.id === resourceId)
@@ -150,20 +271,13 @@ export default function AssetManagement({ selectedAssetType }: AssetManagementPr
               ) : (
                 <div className="space-y-2">
                   {assets.map((asset) => (
-                    <div
+                    <EditableAssetItem
                       key={asset.id}
-                      className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h5 className="font-medium text-gray-900">{asset.label}</h5>
-                          <p className="text-sm text-gray-600">Assigned to: {getResourceName(asset.assignedTo)}</p>
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          {new Date(asset.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
+                      asset={asset}
+                      resources={resources}
+                      getResourceName={getResourceName}
+                      onUpdate={loadAssets}
+                    />
                   ))}
                 </div>
               )}

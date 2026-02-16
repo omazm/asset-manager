@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Floor, FloorMapProps } from './types'
 import { Resource } from '@/app/lib/resources'
 import { DynamicSVGItem } from './DynamicSVGItem'
@@ -13,38 +13,15 @@ interface AssetType {
   updatedAt: Date
 }
 
-export default function FloorMap({ floors }: FloorMapProps) {
+interface FloorMapClientProps extends FloorMapProps {
+  resources: Resource[]
+  assetTypes: AssetType[]
+}
+
+export default function FloorMap({ floors, resources, assetTypes }: FloorMapClientProps) {
   const [selectedFloorId, setSelectedFloorId] = useState<string>(
     floors.length > 0 ? floors[0].id : ''
   )
-  const [resources, setResources] = useState<Resource[]>([])
-  const [assetTypes, setAssetTypes] = useState<AssetType[]>([])
-  const [isLoadingResources, setIsLoadingResources] = useState(true)
-  const [isLoadingAssetTypes, setIsLoadingAssetTypes] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/resources')
-      .then(res => res.json())
-      .then(data => {
-        setResources(data)
-        setIsLoadingResources(false)
-      })
-      .catch(error => {
-        console.error('Error fetching resources:', error)
-        setIsLoadingResources(false)
-      })
-    
-    fetch('/api/asset-types')
-      .then(res => res.json())
-      .then(data => {
-        setAssetTypes(data)
-        setIsLoadingAssetTypes(false)
-      })
-      .catch(error => {
-        console.error('Error fetching asset types:', error)
-        setIsLoadingAssetTypes(false)
-      })
-  }, [])
 
   const selectedFloor = floors.find((floor) => floor.id === selectedFloorId)
 

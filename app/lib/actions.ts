@@ -138,6 +138,57 @@ export async function getAssetsByType(assetTypeId: string) {
   }
 }
 
+export async function updateAsset(prevState: any, formData: FormData) {
+  const id = formData.get('id') as string
+  const label = formData.get('label') as string
+  const assignedTo = formData.get('assignedTo') as string
+
+  if (!id) {
+    return {
+      success: false,
+      error: 'Asset ID is required'
+    }
+  }
+
+  if (!label || typeof label !== 'string' || label.trim().length === 0) {
+    return {
+      success: false,
+      error: 'Asset label is required'
+    }
+  }
+
+  if (!assignedTo || typeof assignedTo !== 'string' || assignedTo.trim().length === 0) {
+    return {
+      success: false,
+      error: 'Assigned to field is required'
+    }
+  }
+
+  try {
+    const asset = await prisma.asset.update({
+      where: { id },
+      data: {
+        label: label.trim(),
+        assignedTo: assignedTo.trim()
+      }
+    })
+
+    revalidatePath('/asset-types')
+    
+    return {
+      success: true,
+      data: asset
+    }
+  } catch (error: any) {
+    console.error('Error updating asset:', error)
+    
+    return {
+      success: false,
+      error: 'Failed to update asset'
+    }
+  }
+}
+
 export async function getFloors() {
   try {
     const floors = await prisma.floor.findMany({

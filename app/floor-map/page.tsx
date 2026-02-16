@@ -1,9 +1,16 @@
 import Link from 'next/link'
 import FloorMap from '@/app/components/FloorMap'
 import { getFloors } from '@/app/lib/actions'
+import { resources } from '@/app/lib/resources'
+import { prisma } from '@/app/lib/prisma'
 
 export default async function FloorMapPage() {
-  const floors = await getFloors()
+  const [floors, assetTypes] = await Promise.all([
+    getFloors(),
+    prisma.assetType.findMany({
+      orderBy: { name: 'asc' }
+    })
+  ])
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -21,7 +28,7 @@ export default async function FloorMapPage() {
           </Link>
         </div>
 
-        <FloorMap floors={floors} />
+        <FloorMap floors={floors} resources={resources} assetTypes={assetTypes} />
 
         {/* Development Debug View */}
         <div className="mt-8 bg-white rounded-lg shadow-md">
