@@ -1,6 +1,6 @@
 import { FloorItem } from './types'
 import { Resource } from '@/app/lib/resources'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 interface SVGElement {
   type: 'rect' | 'circle' | 'line' | 'path'
@@ -83,40 +83,53 @@ export function DynamicSVGItem({ item, svgData, resources, onPositionChange, svg
     setIsDragging(true)
   }
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !dragStartRef.current) return
-    
-    e.preventDefault()
-    const svgCoords = getSVGCoordinates(e.clientX, e.clientY)
-    const newX = svgCoords.x - dragStartRef.current.x
-    const newY = svgCoords.y - dragStartRef.current.y
-    
-    setDragPos({ x: newX, y: newY })
-  }
+  // Use useEffect to attach/detach global listeners during drag
+  useEffect(() => {
+    if (!isDragging) return
 
-  const handleMouseUp = (e: React.MouseEvent) => {
-    if (isDragging) {
-      e.preventDefault()
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!dragStartRef.current) return
+      
+      const svgCoords = getSVGCoordinates(e.clientX, e.clientY)
+      const newX = svgCoords.x - dragStartRef.current.x
+      const newY = svgCoords.y - dragStartRef.current.y
+      
+      setDragPos({ x: newX, y: newY })
+    }
+
+    const handleGlobalMouseUp = (e: MouseEvent) => {
       setIsDragging(false)
+      const svgCoords = getSVGCoordinates(e.clientX, e.clientY)
+      const finalX = svgCoords.x - (dragStartRef.current?.x ?? 0)
+      const finalY = svgCoords.y - (dragStartRef.current?.y ?? 0)
+      
       dragStartRef.current = null
       
-      // Save position to database
-      if (onPositionChange && (dragPos.x !== pos.x || dragPos.y !== pos.y)) {
-        onPositionChange(item.id, dragPos.x, dragPos.y)
+      // Save position to database if it changed
+      if (onPositionChange && (Math.abs(finalX - pos.x) > 1 || Math.abs(finalY - pos.y) > 1)) {
+        onPositionChange(item.id, finalX, finalY)
       }
     }
-  }
+
+    // Attach global listeners
+    window.addEventListener('mousemove', handleGlobalMouseMove)
+    window.addEventListener('mouseup', handleGlobalMouseUp)
+
+    // Cleanup on unmount or when drag ends
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMouseMove)
+      window.removeEventListener('mouseup', handleGlobalMouseUp)
+    }
+  }, [isDragging, dragPos.x, dragPos.y, pos.x, pos.y, item.id, onPositionChange])
 
   return (
     <g 
       transform={`translate(${dragPos.x}, ${dragPos.y}) rotate(${rotation})`}
       onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
       style={{ 
         cursor: isDragging ? 'grabbing' : 'grab',
-        opacity: isDragging ? 0.7 : 1
+        opacity: isDragging ? 0.7 : 1,
+        pointerEvents: 'all'
       }}
     >
       {parsedSVG.elements.map((element, index) => renderElement(element, index))}
